@@ -50,19 +50,13 @@ A modern web-based tool to **test, monitor, and clean up Kubernetes resources** 
 
 ### Installation
 
-1. **Clone the repository:**
-   ```sh
-   git clone https://github.com/yourusername/k8s-deployment-tester.git
-   cd k8s-deployment-tester
-   ```
-
-2. **Install backend dependencies:**
+1. **Install backend dependencies:**
    ```sh
    cd backend
    npm install
    ```
 
-3. **Install frontend dependencies:**
+2. **Install frontend dependencies:**
    ```sh
    cd ../frontend
    npm install
