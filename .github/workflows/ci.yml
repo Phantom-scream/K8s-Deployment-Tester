@@ -6,28 +6,34 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
+      - name: Workaround git safe.directory
+        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          lfs: false
+
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
+          cache: npm
 
       - name: Install backend deps
-        run: |
-          cd backend
-          npm ci || npm install
+        working-directory: backend
+        run: npm ci || npm install
 
       - name: Install frontend deps
-        run: |
-          cd frontend
-          npm ci || npm install
+        working-directory: frontend
+        run: npm ci || npm install
 
       - name: Backend unit tests
-        run: |
-          cd backend
-          npm test --if-present
+        working-directory: backend
+        run: npm test --if-present
 
       - name: Frontend unit tests
-        run: |
-          cd frontend
-          npm test --if-present -- --watchAll=false
+        working-directory: frontend
+        run: npm test --if-present -- --watchAll=false
