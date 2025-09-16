@@ -16,16 +16,19 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: npm
 
       - name: Install backend deps
-        run: npm ci --prefix backend || npm install --prefix backend
+        working-directory: backend
+        run: npm install
 
       - name: Install frontend deps
-        run: npm ci --prefix frontend || npm install --prefix frontend
+        working-directory: frontend
+        run: npm install
 
       - name: Backend unit tests
-        run: npm --prefix backend test --if-present
+        working-directory: backend
+        run: npm test --if-present
 
       - name: Frontend unit tests
-        run: npm --prefix frontend test -- --watchAll=false
+        working-directory: frontend
+        run: npm test -- --watchAll=false
