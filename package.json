@@ -1,15 +1,6 @@
 {
   "name": "k8s-deployment-tester",
+  "private": true,
   "version": "1.0.0",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
-  "dependencies": {
-    "js-yaml": "^4.1.0"
-  }
+  "scripts": { "test": "echo \"No tests at root\" && exit 0" }
 }
