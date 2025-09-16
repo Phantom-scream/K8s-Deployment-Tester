@@ -6,8 +6,6 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
     steps:
       - uses: actions/checkout@v4
         with:
@@ -18,17 +16,21 @@ jobs:
           node-version: 18
 
       - name: Install backend deps
-        working-directory: backend
-        run: npm install
+        run: |
+          cd backend
+          npm install
 
       - name: Install frontend deps
-        working-directory: frontend
-        run: npm install
+        run: |
+          cd frontend
+          npm install
 
       - name: Backend unit tests
-        working-directory: backend
-        run: npm test --if-present
+        run: |
+          cd backend
+          npm test --if-present
 
       - name: Frontend unit tests
-        working-directory: frontend
-        run: npm test -- --watchAll=false
+        run: |
+          cd frontend
+          npm test -- --watchAll=false
