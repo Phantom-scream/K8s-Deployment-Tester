@@ -35,32 +35,63 @@ function runTest(yamlPath, socket, customCmd) {
     fs.writeFileSync(tempPath, yaml.dump(doc));
 
     socket.emit("log", `\n📦 [${doc.kind}] "${doc.metadata.name}" (Document ${idx + 1})`);
-    socket.emit("log", `➡️  Applying resource to the cluster...`);
-    const deployCmd = `kubectl apply -f ${tempPath}`;
-    const child = exec(deployCmd);
+    socket.emit("log", `➡️  Validating YAML (dry-run)...`);
+    const validateCmd = `kubectl apply --dry-run=client -f ${tempPath}`;
+    const validate = exec(validateCmd);
 
-    child.stdout.on("data", (data) => {
-      socket.emit("log", data.toString());
-    });
+    validate.stdout.on("data", (data) => socket.emit("log", data.toString()));
+    validate.stderr.on("data", (data) => socket.emit("log", `❗ ERROR: ${data.toString()}`));
 
-    child.stderr.on("data", (data) => {
-      socket.emit("log", `❗ ERROR: ${data.toString()}`);
-    });
-
-    child.on("exit", async (code) => {
-      if (code === 0) {
-        socket.emit("log", `✅ [${doc.kind}] "${doc.metadata.name}" applied successfully.`);
-        if (doc.kind === "Deployment") {
-          socket.emit("log", `⏳ Waiting for Deployment "${doc.metadata.name}" to be ready...`);
-          await waitForDeploymentReady(doc.metadata.name, doc.metadata.namespace || "default", socket);
-        }
-      } else {
-        socket.emit("log", `❌ [${doc.kind}] "${doc.metadata.name}" failed with code ${code}`);
+    validate.on("exit", (vcode) => {
+      if (vcode !== 0) {
+        socket.emit("log", `❌ Validation failed for "${doc.metadata.name}". Skipping apply.`);
+        socket.emit("log", `🗑️  Cleaning up temp file for "${doc.metadata.name}"`);
+        fs.unlinkSync(tempPath);
+        completed++;
+        if (completed === docs.length) runCustomCmd();
+        return;
       }
-      socket.emit("log", `🗑️  Cleaning up temp file for "${doc.metadata.name}"`);
-      fs.unlinkSync(tempPath);
-      completed++;
-      if (completed === docs.length) runCustomCmd();
+
+      socket.emit("log", `✅ Validation passed. Applying resource to the cluster...`);
+      const deployCmd = `kubectl apply -f ${tempPath}`;
+      const child = exec(deployCmd);
+
+      child.stdout.on("data", (data) => {
+        socket.emit("log", data.toString());
+      });
+
+      child.stderr.on("data", (data) => {
+        socket.emit("log", `❗ ERROR: ${data.toString()}`);
+      });
+
+      child.on("exit", async (code) => {
+        if (code === 0) {
+          socket.emit("log", `✅ [${doc.kind}] "${doc.metadata.name}" applied successfully.`);
+          if (doc.kind === "Deployment") {
+            socket.emit("log", `⏳ Waiting for Deployment "${doc.metadata.name}" to be ready...`);
+
+            // Determine label selector for pods
+            const selector = doc.spec?.selector?.matchLabels || { app: doc.metadata.name };
+            const ns = doc.metadata.namespace || "default";
+
+            // Start pod tracking
+            const tracker = { stop: false };
+            trackPods(selector, ns, socket, tracker);
+
+            const ready = await waitForDeploymentReady(doc.metadata.name, ns, socket);
+            tracker.stop = true; // stop pod tracking once ready or timed out
+            if (!ready) {
+              socket.emit("log", `❌ Deployment "${doc.metadata.name}" did not become ready in time.`);
+            }
+          }
+        } else {
+          socket.emit("log", `❌ [${doc.kind}] "${doc.metadata.name}" failed with code ${code}`);
+        }
+        socket.emit("log", `🗑️  Cleaning up temp file for "${doc.metadata.name}"`);
+        fs.unlinkSync(tempPath);
+        completed++;
+        if (completed === docs.length) runCustomCmd();
+      });
     });
   });
 
@@ -116,6 +147,35 @@ function waitForDeploymentReady(name, namespace = "default", socket, timeout = 6
     };
     check();
   });
+}
+
+function trackPods(matchLabels, namespace, socket, tracker, intervalMs = 2000) {
+  const kv = Object.entries(matchLabels)[0] || ["app", ""];
+  const selector = `${kv[0]}=${kv[1]}`;
+  const tick = () => {
+    if (tracker.stop) return;
+    const cmd = `kubectl get pods -n ${namespace} -l ${selector} -o json`;
+    exec(cmd, (err, stdout) => {
+      if (tracker.stop) return;
+      if (err) {
+        socket.emit("log", `❗ ERROR: Failed to list pods for selector "${selector}" in ns "${namespace}"`);
+        return setTimeout(tick, intervalMs);
+      }
+      try {
+        const pods = JSON.parse(stdout).items.map(p => ({
+          name: p.metadata?.name,
+          phase: p.status?.phase,
+          restarts: (p.status?.containerStatuses || []).reduce((a, c) => a + (c.restartCount || 0), 0),
+          node: p.spec?.nodeName || "",
+        }));
+        socket.emit("podStatus", { namespace, selector, pods });
+      } catch {
+        // ignore parse errors, will retry
+      }
+      setTimeout(tick, intervalMs);
+    });
+  };
+  tick();
 }
 
 module.exports = { runTest, waitForDeploymentReady };

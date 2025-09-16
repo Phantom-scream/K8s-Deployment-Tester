@@ -1,0 +1,33 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install backend deps
+        run: |
+          cd backend
+          npm ci || npm install
+
+      - name: Install frontend deps
+        run: |
+          cd frontend
+          npm ci || npm install
+
+      - name: Backend unit tests
+        run: |
+          cd backend
+          npm test --if-present
+
+      - name: Frontend unit tests
+        run: |
+          cd frontend
+          npm test --if-present -- --watchAll=false
