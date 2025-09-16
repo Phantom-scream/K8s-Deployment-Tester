@@ -15,22 +15,25 @@ jobs:
         with:
           node-version: 18
 
-      - name: Install backend deps
+      - name: Debug repo layout
         run: |
-          cd backend
-          npm install
+          pwd
+          ls -la
+          ls -la frontend || true
+          ls -la backend || true
+
+      - name: Install backend deps
+        working-directory: backend
+        run: npm install
 
       - name: Install frontend deps
-        run: |
-          cd frontend
-          npm install
+        working-directory: frontend
+        run: npm install
 
       - name: Backend unit tests
-        run: |
-          cd backend
-          npm test --if-present
+        working-directory: backend
+        run: npm test --if-present
 
       - name: Frontend unit tests
-        run: |
-          cd frontend
-          npm test -- --watchAll=false
+        working-directory: frontend
+        run: npm test -- --watchAll=false
