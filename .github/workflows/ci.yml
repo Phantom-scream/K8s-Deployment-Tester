@@ -9,13 +9,9 @@ jobs:
     permissions:
       contents: read
     steps:
-      - name: Workaround git safe.directory
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          lfs: false
 
       - uses: actions/setup-node@v4
         with:
@@ -23,17 +19,13 @@ jobs:
           cache: npm
 
       - name: Install backend deps
-        working-directory: backend
-        run: npm ci || npm install
+        run: npm ci --prefix backend || npm install --prefix backend
 
       - name: Install frontend deps
-        working-directory: frontend
-        run: npm ci || npm install
+        run: npm ci --prefix frontend || npm install --prefix frontend
 
       - name: Backend unit tests
-        working-directory: backend
-        run: npm test --if-present
+        run: npm --prefix backend test --if-present
 
       - name: Frontend unit tests
-        working-directory: frontend
-        run: npm test --if-present -- --watchAll=false
+        run: npm --prefix frontend test -- --watchAll=false
