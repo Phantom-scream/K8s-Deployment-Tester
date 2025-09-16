@@ -1,0 +1,95 @@
+body {
+  background: #f7fafd;
+  margin: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+.app-container {
+  max-width: 700px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+  padding: 2rem 2.5rem 2.5rem 2.5rem;
+}
+
+h1 {
+  color: #0074d9;
+  margin-bottom: 0.5rem;
+}
+
+.tip {
+  background: #eaf6fb;
+  border-left: 4px solid #0074d9;
+  padding: 1rem;
+  border-radius: 7px;
+  margin-bottom: 1.5rem;
+  color: #333;
+}
+
+.upload-form {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.upload-form input[type="file"] {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 0.4rem;
+  background: #f9f9f9;
+}
+
+.upload-form input[type="text"] {
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  padding: 0.4rem 0.7rem;
+  background: #f9f9f9;
+}
+
+.upload-form button {
+  background: #0074d9;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.upload-form button:disabled {
+  background: #b3d6f2;
+  cursor: not-allowed;
+}
+
+.cleanup-btn {
+  background: #ff4136;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 0.5rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: background 0.2s;
+}
+
+.cleanup-btn:disabled {
+  background: #ffd6d6;
+  cursor: not-allowed;
+}
+
+.log-viewer {
+  white-space: pre-line;
+  background: #f4f4f4;
+  padding: 1rem;
+  height: 320px;
+  overflow-y: scroll;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  font-family: 'Fira Mono', 'Consolas', monospace;
+  font-size: 1rem;
+  margin-top: 1rem;
+}
